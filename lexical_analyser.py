@@ -87,11 +87,6 @@ class LexicalAnalyser:
 
     def separate_text_whitespace(self, text):
         m = re.compile("[\S]+")
-        # delimiters = list(m.finditer(text))
-        # out = []
-        # for i in delimiters:
-        #     out.append(i.group())
-        # return out
         return m.findall(text)
 
     def separate_whitespace(self, table):
@@ -170,6 +165,8 @@ class LexicalAnalyser:
         return self.table
 
 lex = LexicalAnalyser()
-ex = "void main() {\nint a, b, c;\n c = a + b; }"
-ex2 = "void main() {\nint a, b, c;\n c = a + b;\n a=c-b;}"
-lex.readCode(ex2)
+ex = ''
+with open("example2.c") as f:
+    ex = f.read()
+
+lex.readCode(ex)
