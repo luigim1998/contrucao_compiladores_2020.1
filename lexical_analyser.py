@@ -51,13 +51,30 @@ class LexicalAnalyser:
         return False
     
     def isString(self, tok):
-        r = re.compile(self.STRING)
-        m = r.match(tok)
-        if(m == None):
-            return False
-        if(m.end() - m.start() == len(tok)):
+        r = tok.strip()
+        # descrição do autômato, linha = símbolos e colunas = estados
+        # símbolos na tabela: ", \, 'outro símbolo qualquer'
+        # estados: 
+        #   0: estado inicial             1: estado dentro da string
+        #   2: estado recebeu '\' antes   3: estado final
+        #   4: estado morto
+        estados = [[1,3,1,4,4],
+                   [4,2,1,4,4],
+                   [4,1,1,4,4]]
+        simbolo = 0
+        estados_atual = 0
+
+        for i in r:
+            if   i == "\"": simbolo = 0
+            elif i == "\\": simbolo = 1
+            else: 2
+
+            estados_atual = estados[simbolo][estados_atual]
+        
+        if(estados_atual == 3):
             return True
-        return False
+        else:
+            return False
     
     def isDelimit(self, tok):
         r = re.compile(self.DELIMIT)
@@ -67,6 +84,43 @@ class LexicalAnalyser:
         if(m.end() - m.start() == len(tok)):
             return True
         return False
+
+    def separate_text_strings(self, text):
+        cont = 0
+        # Estados de state:
+        # 0 - fora de uma string
+        # 1 - dentro da string
+        # 2 - dentro da string e analisando o que vem depois do '\'
+        state = 0
+        last_cut = 0
+        out = []
+        
+        while(cont < len(text)):
+
+            if(state == 0):
+                if(text[cont] == "\""):
+                    state = 1
+                    if(len(text[last_cut:cont])): out.append(text[last_cut:cont])
+                    last_cut = cont
+            elif(state == 1):
+                if(text[cont] == "\""):
+                    state = 0
+                    if(len(text[last_cut:cont+1])): out.append(text[last_cut:cont+1])
+                    last_cut = cont + 1
+                elif(text[cont] == "\\"):
+                    state = 2
+                elif(text[cont] == "\n"):
+                    state = 0
+                    if(len(text[last_cut:cont+1])): out.append(text[last_cut:cont+1])
+                    last_cut = cont+1
+            else: #state == 2
+                state = 1
+
+            cont += 1
+
+        if(len(text[last_cut:])): out.append(text[last_cut:])
+
+        return out
 
     def separate_text_delimits(self, text):
         cont = 0
@@ -82,6 +136,16 @@ class LexicalAnalyser:
         
         if(cont != len(text)): #existe texto após o último delimitador
             out.append(text[cont:])
+        
+        return out
+    
+    def separate_delimits(self, table):
+        out = []
+
+        for i in table:
+            words = self.separate_text_delimits(i)
+            if(len(words) != 0): # não há texto
+                out.extend(words)
         
         return out
 
@@ -152,14 +216,17 @@ class LexicalAnalyser:
         return out
 
     def readCode(self, text):
-        self.table = self.separate_text_delimits(text)
-        print(self.get_table())
+        print(text, end = "\n\n")
+        self.table = self.separate_text_strings(text)
+        print(self.get_table(), end = "\n\n")
+        self.table = self.separate_delimits(self.table)
+        print(self.get_table(), end = "\n\n")
         self.table = self.separate_operators(self.table)
-        print(self.get_table())
+        print(self.get_table(), end = "\n\n")
         self.table = self.separate_whitespace(self.table)
-        print(self.get_table())
+        print(self.get_table(), end = "\n\n")
         self.table = self.classify_tokens(self.table)
-        print(self.get_table())
+        print(self.get_table(), end = "\n\n")
     
     def get_table(self):
         return self.table
