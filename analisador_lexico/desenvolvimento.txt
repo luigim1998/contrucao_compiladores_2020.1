@@ -1,0 +1,5 @@
+foi criado um arquivo com especificação de expressões regulares que representam cada item léxico, a ideia se assemelha com a apresentada no livro de Ricarte. Porém, como haviam itens que seriam mais complexos para representar em uma expressão regular e foi optado colocar direto no código.
+Após isso, foi tido a ideia de unir os operadores, palavras especiais e padrões, entre outros itens em um arquivo json, isso para mim permite organizar melhor os tipos de lexemas e tokens.
+
+Referências:
+https://docs.python.org/3.8/howto/regex.html
